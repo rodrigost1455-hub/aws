@@ -6,176 +6,304 @@
   <style>
     /* =========================================================
        TCC — Total Client Chart (Circle Chart)
-       Letter, absolute-positioned. Bubble GRID slots are FIXED
-       at 6 per spouse / 6 for non-retirement — empty cells are
-       left blank but their positions never reflow.
+       Premium / enterprise edition. Letter, absolute-positioned.
+       Fixed 6-slot grids per spouse / for non-ret — never reflow.
        ========================================================= */
     :root {
-      --blue:    #1e3a8a;
-      --blue-2:  #2563eb;
-      --blue-3:  #dbeafe;
-      --green:   #15803d;
-      --green-2: #22c55e;
-      --green-3: #dcfce7;
-      --amber:   #b45309;
-      --amber-3: #fef3c7;
-      --gray:    #334155;
-      --gray-3:  #e2e8f0;
-      --gray-4:  #f1f5f9;
-      --ink:     #0f172a;
-      --muted:   #475569;
-      --line:    #cbd5e1;
+      --navy:      #0b2a4a;
+      --navy-2:    #1e4271;
+      --navy-3:    #eef2f8;
+      --gold:      #a8884d;
+      --gold-2:    #c7a96b;
+      --gold-3:    #f5efe1;
+      --green:     #2f6b4a;
+      --green-2:   #4a8a64;
+      --green-3:   #e7eee9;
+      --gray:      #4a5160;
+      --gray-3:    #e2e6eb;
+      --gray-4:    #f5f6f8;
+      --ink:       #1a1f2e;
+      --muted:     #5c6675;
+      --muted-2:   #98a0ad;
+      --hair:      #e2e6eb;
+      --paper:     #fbfaf6;
     }
     @page { size: letter; margin: 0; }
-    html, body { padding: 0; margin: 0; color: var(--ink); font-family: "Helvetica","Arial",sans-serif; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
-
-    .page { position: relative; width: 8.5in; height: 11in; overflow: hidden; }
-
-    .brand-bar {
-      position: absolute; top: 0; left: 0; right: 0; height: 0.55in;
-      background: var(--blue); color: #fff;
+    html, body {
+      padding: 0; margin: 0; color: var(--ink); background: #fff;
+      font-family: "Helvetica Neue","Helvetica","Arial",sans-serif;
+      -webkit-font-smoothing: antialiased;
+      font-variant-numeric: tabular-nums lining-nums;
     }
-    .brand-bar .mark   { position: absolute; left: 0.55in; top: 50%; transform: translateY(-50%); font-size: 13pt; font-weight: 800; letter-spacing: 0.18em; }
-    .brand-bar .doctype{ position: absolute; right: 0.55in; top: 50%; transform: translateY(-50%); font-size: 9pt;  letter-spacing: 0.22em; opacity: 0.9; }
 
-    .household { position: absolute; left: 0.55in; right: 0.55in; top: 0.78in; height: 0.55in; }
-    .household .eyebrow { font-size: 8pt; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
-    .household h1 { margin: 4pt 0 0; font-size: 20pt; line-height: 1; font-weight: 700; letter-spacing: -0.01em; }
-    .household .meta { position: absolute; right: 0; top: 0; text-align: right; font-size: 9pt; color: var(--muted); }
-    .household .meta .quarter { display: block; font-size: 11pt; color: var(--ink); font-weight: 600; }
+    .page { position: relative; width: 8.5in; height: 11in; background: var(--paper); overflow: hidden; }
 
-    /* --- Client info bubbles (green) --------------------------------- */
-    .person-row { position: absolute; left: 0.55in; right: 0.55in; top: 1.42in; height: 0.9in; }
+    /* --- Brand bar -------------------------------------------------- */
+    .brand-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 0.7in;
+      background: var(--navy); color: #fff;
+    }
+    .brand-bar::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+      height: 3pt; background: var(--gold);
+    }
+    .brand-bar .mark {
+      position: absolute; left: 0.7in; top: 50%; transform: translateY(-50%);
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 14pt; font-weight: 700; letter-spacing: 0.04em;
+    }
+    .brand-bar .mark span { color: var(--gold-2); }
+    .brand-bar .doctype {
+      position: absolute; right: 0.7in; top: 50%; transform: translateY(-50%);
+      font-size: 8.5pt; letter-spacing: 0.28em; opacity: 0.85;
+    }
+
+    /* --- Household header ------------------------------------------ */
+    .household {
+      position: absolute; left: 0.7in; right: 0.7in; top: 0.95in;
+      height: 0.68in;
+    }
+    .household .eyebrow {
+      font-size: 7.5pt; letter-spacing: 0.28em; color: var(--gold);
+      text-transform: uppercase; font-weight: 600;
+    }
+    .household h1 {
+      margin: 5pt 0 0;
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 21pt; line-height: 1; font-weight: 400; color: var(--ink);
+      letter-spacing: -0.005em;
+    }
+    .household .meta {
+      position: absolute; right: 0; top: 4pt; text-align: right;
+      font-size: 8.5pt; color: var(--muted);
+    }
+    .household .meta .quarter {
+      display: block;
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 12pt; color: var(--navy); font-weight: 400;
+    }
+
+    .gold-rule {
+      position: absolute; left: 0.7in; width: 0.45in; height: 1pt;
+      background: var(--gold);
+      top: 1.78in;
+    }
+
+    /* --- Client info pills (green, premium) ------------------------ */
+    .person-row { position: absolute; left: 0.7in; right: 0.7in; top: 1.95in; height: 0.78in; }
     .person {
-      position: absolute; width: 3.45in; height: 0.9in;
+      position: absolute; width: 3.4in; height: 0.78in;
       box-sizing: border-box;
-      border-radius: 50pt;
-      background: var(--green-3); border: 2pt solid var(--green); color: var(--green);
-      padding: 8pt 18pt;
+      border-radius: 4pt;
+      background: var(--green-3);
+      border: 1pt solid var(--green);
+      color: var(--green);
+      padding: 10pt 18pt;
       overflow: hidden;
+    }
+    .person::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4pt; background: var(--green);
     }
     .person.c1 { left: 0; }
     .person.c2 { right: 0; }
-    .person .name { font-size: 13pt; font-weight: 700; color: var(--green); }
-    .person .row  { font-size: 8.5pt; color: var(--green); opacity: 0.85; margin-top: 3pt; letter-spacing: 0.06em; }
-    .person .row .pip { display: inline-block; margin-right: 8pt; }
-    .person.empty { background: #fff; border-color: var(--gray-3); }
-    .person.empty .name, .person.empty .row { color: #94a3b8; }
-
-    /* --- Section frames --------------------------------------------- */
-    .frame { position: absolute; left: 0.55in; right: 0.55in; }
-    .frame h3 {
-      margin: 0 0 6pt;
-      font-size: 10pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+    .person .name {
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 14pt; font-weight: 400; color: var(--green);
     }
-    .frame h3 b { color: var(--ink); letter-spacing: 0; text-transform: none; font-size: 12pt; margin-left: 8pt; }
+    .person .row {
+      font-size: 8pt; color: var(--green); opacity: 0.95;
+      margin-top: 5pt; letter-spacing: 0.08em;
+    }
+    .person .row .pip { display: inline-block; margin-right: 10pt; }
+    .person.empty { background: #fff; border-color: var(--hair); }
+    .person.empty::before { background: var(--hair); }
+    .person.empty .name, .person.empty .row { color: var(--muted-2); }
 
-    /* Retirement section — fixed 6-cell grid per spouse (2 cols × 3 rows) */
-    .ret-section { top: 2.5in; height: 3.0in; }
+    /* --- Section frames -------------------------------------------- */
+    .frame { position: absolute; left: 0.7in; right: 0.7in; }
+    .frame h3 {
+      margin: 0 0 8pt;
+      font-size: 8.5pt; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold); font-weight: 600;
+    }
+    .frame h3 b {
+      color: var(--ink); letter-spacing: 0; text-transform: none;
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 13pt; font-weight: 400; margin-left: 8pt;
+    }
+
+    /* Retirement — two columns */
+    .ret-section { top: 2.95in; height: 2.8in; }
     .col {
-      position: absolute; top: 22pt; width: 3.45in; height: 2.7in;
-      border: 1pt solid var(--gray-3); border-radius: 14pt; padding: 14pt;
+      position: absolute; top: 24pt; width: 3.4in; height: 2.5in;
+      border: 1pt solid var(--hair); border-radius: 6pt;
+      background: #fff;
+      padding: 14pt;
       box-sizing: border-box;
-      background: var(--gray-4);
     }
     .col.c1 { left: 0; }
     .col.c2 { right: 0; }
-    .col .col-head { font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 8pt; }
-    .col .col-head b { color: var(--green); }
+    .col .col-head { font-size: 8pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 10pt; }
+    .col .col-head b { color: var(--green); letter-spacing: 0; text-transform: none; font-size: 9.5pt; font-weight: 600; }
     .col .col-total {
       position: absolute; bottom: 10pt; left: 14pt; right: 14pt;
-      border-top: 1pt solid var(--gray-3); padding-top: 6pt;
-      font-size: 9pt; color: var(--muted);
+      border-top: 0.5pt solid var(--hair); padding-top: 8pt;
+      font-size: 8pt; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
     }
-    .col .col-total .v { float: right; font-size: 11pt; font-weight: 700; color: var(--ink); }
+    .col .col-total .v {
+      float: right; font-family: "Georgia","Times New Roman",serif;
+      font-size: 12pt; font-weight: 400; color: var(--ink); letter-spacing: 0;
+    }
 
-    /* Account bubble grid — fixed 6 slots positioned absolutely */
-    .acct-grid { position: relative; height: 1.95in; }
+    /* Retirement bubble grid — fixed 6 slots */
+    .acct-grid { position: relative; height: 1.7in; }
     .acct-bubble {
       position: absolute;
-      width: 1.45in; height: 0.78in;
-      border-radius: 10pt;
-      background: #fff; border: 1.5pt solid var(--green-2);
+      width: 1.4in; height: 0.66in;
+      border-radius: 4pt;
+      background: var(--green-3);
+      border: 1pt solid var(--green-2);
       box-sizing: border-box;
-      padding: 6pt 8pt; overflow: hidden;
+      padding: 5pt 8pt; overflow: hidden;
     }
-    .acct-bubble.empty { border-style: dashed; border-color: var(--gray-3); background: transparent; }
-    .acct-bubble .type { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .acct-bubble .num  { font-size: 7.5pt; color: var(--muted); margin-top: 1pt; }
-    .acct-bubble .bal  { position: absolute; left: 8pt; right: 8pt; bottom: 5pt; text-align: right; font-size: 10.5pt; font-weight: 700; }
+    .acct-bubble.empty {
+      border-style: dashed; border-color: var(--hair);
+      background: transparent;
+    }
+    .acct-bubble .type { font-size: 7.5pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .acct-bubble .num  { font-size: 7pt; color: var(--muted); margin-top: 1pt; letter-spacing: 0.04em; }
+    .acct-bubble .bal  {
+      position: absolute; left: 8pt; right: 8pt; bottom: 4pt;
+      text-align: right;
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 11pt; font-weight: 400; color: var(--ink);
+    }
     .acct-bubble .bal.long  { font-size: 9pt; }
     .acct-bubble .bal.xlong { font-size: 7.5pt; }
-    .acct-bubble .cash { position: absolute; left: 8pt; bottom: 5pt; font-size: 7pt; color: var(--muted); }
+    .acct-bubble .cash { position: absolute; left: 8pt; bottom: 4pt; font-size: 7pt; color: var(--muted); }
 
-    /* Slot positions: 2 columns × 3 rows */
-    .slot-1 { left: 0;       top: 14pt; }
-    .slot-2 { right: 0;      top: 14pt; }
-    .slot-3 { left: 0;       top: 76pt; }
-    .slot-4 { right: 0;      top: 76pt; }
-    .slot-5 { left: 0;       top: 138pt; }
-    .slot-6 { right: 0;      top: 138pt; }
+    .slot-1 { left: 0;       top: 8pt; }
+    .slot-2 { right: 0;      top: 8pt; }
+    .slot-3 { left: 0;       top: 62pt; }
+    .slot-4 { right: 0;      top: 62pt; }
+    .slot-5 { left: 0;       top: 116pt; }
+    .slot-6 { right: 0;      top: 116pt; }
 
-    /* Non-retirement section — full-width 6-slot grid (3 × 2) */
-    .nonret-section { top: 5.7in; height: 2.2in; border: 1pt solid var(--gray-3); border-radius: 14pt; padding: 14pt; box-sizing: border-box; background: var(--gray-4); }
-    .nonret-section h3 { margin-bottom: 6pt; }
-    .nonret-grid { position: relative; height: 1.55in; }
-    .nonret-grid .acct-bubble { border-color: var(--blue-2); }
-    .nonret-grid .acct-bubble .type { color: var(--blue); }
-    /* 3 columns × 2 rows */
+    /* Non-retirement — FIX: position: absolute (this was the bug) */
+    .nonret-section {
+      position: absolute;
+      left: 0.7in; right: 0.7in; top: 5.9in;
+      height: 1.85in;
+      border: 1pt solid var(--hair); border-radius: 6pt;
+      padding: 14pt;
+      box-sizing: border-box;
+      background: #fff;
+    }
+    .nonret-section h3 {
+      margin: 0 0 4pt;
+      font-size: 8.5pt; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold); font-weight: 600;
+    }
+    .nonret-section h3 b {
+      color: var(--ink); letter-spacing: 0; text-transform: none;
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 13pt; font-weight: 400; margin-left: 8pt;
+    }
+    .nonret-grid { position: relative; height: 1.25in; margin-top: 8pt; }
+    .nonret-grid .acct-bubble {
+      background: var(--navy-3); border-color: var(--navy-2);
+    }
+    .nonret-grid .acct-bubble .type { color: var(--navy); }
     .ns-1 { left: 0;     top: 0; }
     .ns-2 { left: 2.4in; top: 0; }
     .ns-3 { left: 4.8in; top: 0; }
-    .ns-4 { left: 0;     top: 60pt; }
-    .ns-5 { left: 2.4in; top: 60pt; }
-    .ns-6 { left: 4.8in; top: 60pt; }
+    .ns-4 { left: 0;     top: 50pt; }
+    .ns-5 { left: 2.4in; top: 50pt; }
+    .ns-6 { left: 4.8in; top: 50pt; }
     .nonret-section .total {
-      position: absolute; right: 14pt; bottom: 8pt; font-size: 9pt; color: var(--muted);
+      position: absolute; right: 14pt; bottom: 10pt;
+      font-size: 8pt; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
     }
-    .nonret-section .total .v { font-size: 11pt; font-weight: 700; color: var(--ink); margin-left: 8pt; }
+    .nonret-section .total .v {
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 12pt; font-weight: 400; color: var(--ink); margin-left: 8pt; letter-spacing: 0;
+    }
 
-    /* Trust card — center, amber */
-    .trust { position: absolute; left: 0.55in; right: 0.55in; top: 8.05in; height: 0.95in;
-             border-radius: 14pt; background: var(--amber-3); border: 2pt solid var(--amber); padding: 12pt 16pt; box-sizing: border-box; overflow: hidden; }
-    .trust .lbl { font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--amber); }
-    .trust .address { font-size: 12pt; font-weight: 600; color: var(--ink); margin-top: 4pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .trust .zillow-lbl { position: absolute; right: 16pt; top: 12pt; font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--amber); }
-    .trust .zillow-val { position: absolute; right: 16pt; top: 28pt; font-size: 20pt; font-weight: 800; color: var(--amber); }
-    .trust .zillow-val.long  { font-size: 16pt; }
+    /* Trust card — premium gold */
+    .trust {
+      position: absolute; left: 0.7in; right: 0.7in; top: 7.9in; height: 0.88in;
+      border-radius: 6pt; background: var(--gold-3); border: 1pt solid var(--gold);
+      padding: 13pt 18pt; box-sizing: border-box; overflow: hidden;
+    }
+    .trust::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4pt; background: var(--gold); }
+    .trust .lbl { font-size: 8.5pt; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+    .trust .address {
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 13pt; font-weight: 400; color: var(--ink); margin-top: 4pt;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .trust .zillow-lbl { position: absolute; right: 18pt; top: 14pt; font-size: 8.5pt; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+    .trust .zillow-val {
+      position: absolute; right: 18pt; top: 28pt;
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 22pt; font-weight: 400; color: var(--ink);
+    }
+    .trust .zillow-val.long  { font-size: 17pt; }
     .trust .zillow-val.xlong { font-size: 13pt; }
-    .trust.absent { background: #fff; border-style: dashed; border-color: var(--gray-3); }
-    .trust.absent .lbl, .trust.absent .address, .trust.absent .zillow-lbl, .trust.absent .zillow-val { color: #94a3b8; }
+    .trust.absent { background: #fff; border-style: dashed; border-color: var(--hair); }
+    .trust.absent::before { background: var(--hair); }
+    .trust.absent .lbl, .trust.absent .address, .trust.absent .zillow-lbl, .trust.absent .zillow-val { color: var(--muted-2); }
 
-    /* Liabilities — gray pill row */
-    .liab-bar { position: absolute; left: 0.55in; right: 0.55in; top: 9.1in; height: 0.72in;
-                background: var(--gray-4); border: 1pt solid var(--gray-3); border-radius: 12pt; padding: 0 14pt; box-sizing: border-box; overflow: hidden; }
-    .liab-bar .lbl { position: absolute; left: 14pt; top: 10pt; font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-    .liab-bar .total { position: absolute; right: 14pt; top: 10pt; font-size: 9pt; color: var(--muted); }
-    .liab-bar .total .v { font-size: 14pt; font-weight: 800; color: var(--ink); margin-left: 8pt; }
-    .liab-bar .row { position: absolute; left: 14pt; right: 14pt; bottom: 8pt; font-size: 9pt; color: var(--ink); }
-    .liab-pill { display: inline-block; padding: 1pt 8pt; margin-right: 8pt;
-                 background: #fff; border: 1pt solid var(--gray-3); border-radius: 99pt; font-size: 8.5pt; }
-
-    /* Summary boxes — 4 fixed gray cards across the bottom */
-    .summary { position: absolute; left: 0.55in; right: 0.55in; top: 9.95in; height: 0.85in; }
-    .sum-box {
-      position: absolute; width: 1.7in; height: 0.85in;
-      box-sizing: border-box;
-      background: var(--gray-4); border: 1pt solid var(--gray-3); border-radius: 10pt;
-      padding: 8pt 10pt; overflow: hidden;
+    /* Liabilities — hairline pill bar */
+    .liab-bar {
+      position: absolute; left: 0.7in; right: 0.7in; top: 8.9in; height: 0.7in;
+      background: #fff; border: 0.5pt solid var(--hair); border-radius: 6pt;
+      padding: 0 16pt; box-sizing: border-box; overflow: hidden;
     }
-    .sum-box .lbl { font-size: 7.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-    .sum-box .val { font-size: 14pt; font-weight: 800; margin-top: 4pt; }
-    .sum-box .val.long  { font-size: 11pt; }
-    .sum-box .val.xlong { font-size: 9pt; }
+    .liab-bar .lbl { position: absolute; left: 16pt; top: 11pt; font-size: 8.5pt; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+    .liab-bar .total { position: absolute; right: 16pt; top: 11pt; font-size: 8pt; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .liab-bar .total .v {
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 14pt; font-weight: 400; color: var(--ink); margin-left: 8pt; letter-spacing: 0;
+    }
+    .liab-bar .row { position: absolute; left: 16pt; right: 16pt; bottom: 10pt; font-size: 9pt; color: var(--ink); }
+    .liab-pill {
+      display: inline-block; padding: 2pt 10pt; margin-right: 8pt;
+      background: var(--gray-4); border: 0.5pt solid var(--hair); border-radius: 99pt; font-size: 8.5pt;
+    }
+    .liab-pill b { font-family: "Georgia","Times New Roman",serif; font-weight: 400; }
+
+    /* Summary boxes — 4 across, last one navy/gold */
+    .summary { position: absolute; left: 0.7in; right: 0.7in; top: 9.75in; height: 0.95in; }
+    .sum-box {
+      position: absolute; width: 1.7in; height: 0.95in;
+      box-sizing: border-box;
+      background: #fff; border: 1pt solid var(--hair); border-radius: 6pt;
+      padding: 12pt 12pt; overflow: hidden;
+    }
+    .sum-box .lbl { font-size: 7.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .sum-box .val {
+      font-family: "Georgia","Times New Roman",serif;
+      font-size: 16pt; font-weight: 400; margin-top: 8pt; color: var(--ink);
+    }
+    .sum-box .val.long  { font-size: 12pt; }
+    .sum-box .val.xlong { font-size: 9.5pt; }
     .sum-box.s1 { left: 0; }
     .sum-box.s2 { left: 1.85in; }
     .sum-box.s3 { left: 3.7in; }
-    .sum-box.s4 { left: 5.55in; background: var(--blue-3); border-color: var(--blue); color: var(--blue); }
-    .sum-box.s4 .lbl { color: var(--blue); }
+    .sum-box.s4 {
+      left: 5.55in;
+      background: var(--navy); border-color: var(--navy); color: #fff;
+    }
+    .sum-box.s4::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4pt; background: var(--gold); }
+    .sum-box.s4 .lbl { color: var(--gold-2); }
+    .sum-box.s4 .val { color: #fff; }
 
-    .footer { position: absolute; left: 0.55in; right: 0.55in; bottom: 0.18in;
-              font-size: 7.5pt; color: var(--muted); letter-spacing: 0.06em; }
-    .footer .right { float: right; }
+    .footer {
+      position: absolute; left: 0.7in; right: 0.7in; bottom: 0.25in;
+      font-size: 7.5pt; color: var(--muted-2); letter-spacing: 0.08em;
+      border-top: 0.5pt solid var(--hair); padding-top: 6pt;
+    }
+    .footer .right { float: right; color: var(--gold); font-weight: 600; }
   </style>
 </head>
 <body>
@@ -201,12 +329,12 @@
 <section class="page">
 
   <div class="brand-bar">
-    <div class="mark">AW PORTAL</div>
+    <div class="mark">AW <span>·</span> PORTAL</div>
     <div class="doctype">TCC · TOTAL CLIENT CHART</div>
   </div>
 
   <header class="household">
-    <div class="eyebrow">Household</div>
+    <div class="eyebrow">Prepared for</div>
     <h1>{{ household }}</h1>
     <div class="meta">
       <span class="quarter">{{ quarter }}</span>
@@ -214,7 +342,8 @@
     </div>
   </header>
 
-  <!-- Client info bubbles (always two fixed slots; second is muted/empty for singles) -->
+  <div class="gold-rule"></div>
+
   <div class="person-row">
     <div class="person c1">
       <div class="name">{{ client1.name }}</div>
@@ -241,9 +370,9 @@
     {% endif %}
   </div>
 
-  <!-- ============================ Retirement ============================ -->
+  <!-- Retirement -->
   <div class="frame ret-section">
-    <h3>Retirement <b>Tax-deferred &amp; Roth accounts</b></h3>
+    <h3>Retirement <b>Tax-deferred &amp; Roth</b></h3>
 
     <div class="col c1">
       <div class="col-head">Client 1 · <b>{{ client1.name }}</b></div>
@@ -256,9 +385,7 @@
         {{ acct_bubble('slot-5', r1[4] if r1|length > 4 else None) }}
         {{ acct_bubble('slot-6', r1[5] if r1|length > 5 else None) }}
       </div>
-      <div class="col-total">
-        Subtotal <span class="v">{{ totals.c1_retirement | money }}</span>
-      </div>
+      <div class="col-total">Subtotal <span class="v">{{ totals.c1_retirement | money }}</span></div>
     </div>
 
     <div class="col c2">
@@ -272,13 +399,11 @@
         {{ acct_bubble('slot-5', r2[4] if r2|length > 4 else None) }}
         {{ acct_bubble('slot-6', r2[5] if r2|length > 5 else None) }}
       </div>
-      <div class="col-total">
-        Subtotal <span class="v">{{ totals.c2_retirement | money }}</span>
-      </div>
+      <div class="col-total">Subtotal <span class="v">{{ totals.c2_retirement | money }}</span></div>
     </div>
   </div>
 
-  <!-- ============================ Non-Retirement ============================ -->
+  <!-- Non-Retirement (FIXED — now absolutely positioned) -->
   <div class="nonret-section">
     <h3>Non-retirement <b>Brokerage &amp; Joint</b></h3>
     <div class="nonret-grid">
@@ -293,7 +418,7 @@
     <div class="total">Subtotal<span class="v">{{ totals.non_retirement | money }}</span></div>
   </div>
 
-  <!-- ============================ Trust (center) ============================ -->
+  <!-- Trust -->
   {% if trust.exists %}
     <div class="trust">
       <div class="lbl">Trust property</div>
@@ -310,9 +435,9 @@
     </div>
   {% endif %}
 
-  <!-- ============================ Liabilities ============================ -->
+  <!-- Liabilities -->
   <div class="liab-bar">
-    <div class="lbl">Liabilities <span style="text-transform:none;letter-spacing:0;font-size:8pt;color:#94a3b8">· informational · never subtracted</span></div>
+    <div class="lbl">Liabilities <span style="text-transform:none;letter-spacing:0;font-size:7.5pt;color:#98a0ad;font-weight:400">· informational · never subtracted</span></div>
     <div class="total">Liabilities Total <span class="v">{{ totals.liabilities_total | money }}</span></div>
     <div class="row">
       {% if liabilities %}
@@ -320,12 +445,12 @@
           <span class="liab-pill">{{ l.type }}{% if l.rate is not none %} · {{ '%.2f'|format(l.rate|float) }}%{% endif %} · <b>{{ l.balance | money }}</b></span>
         {% endfor %}
       {% else %}
-        <span style="color:#94a3b8">No liabilities on file.</span>
+        <span style="color:#98a0ad">No liabilities on file.</span>
       {% endif %}
     </div>
   </div>
 
-  <!-- ============================ Summary boxes ============================ -->
+  <!-- Summary -->
   <div class="summary">
     <div class="sum-box s1">
       <div class="lbl">Client 1 Retirement</div>
@@ -346,7 +471,7 @@
   </div>
 
   <div class="footer">
-    AW Client Reporting · Confidential — for household {{ household }}
+    AW Client Reporting · Confidential — prepared for {{ household }}
     <span class="right">TCC · {{ quarter }}</span>
   </div>
 
