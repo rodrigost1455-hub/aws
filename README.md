@@ -7,8 +7,7 @@ Three users, ~6–12 clients, single Railway container.
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy 2.0, SQLite, Pydantic v2
 - **PDFs:** Jinja2 templates → WeasyPrint (HTML/CSS → PDF), absolutely
   positioned so layouts never reflow regardless of number length
-- **Frontend:** static HTML/CSS/JS — original Claude Design prototype rewired
-  to fetch the FastAPI API
+- **Frontend:** static HTML/CSS/JS
 - **Deploy:** Dockerfile based on `python:3.12-slim`, mounted SQLite volume
 
 ---
@@ -188,23 +187,7 @@ Docker image.
 
 ## Deploy
 
-Full instructions in **[aw_portal/DEPLOY.md](aw_portal/DEPLOY.md)**. The short
-version:
-
-1. Railway → Deploy from this repo → uses the included `Dockerfile`
-2. Mount a volume at `/data` so SQLite survives redeploys
-   (`RAILWAY_DATABASE_PATH=/data/portal.db`)
-3. Set `CANVA_API_KEY` if Canva export is needed
-4. One-time seed: temporarily set `AW_ALLOW_DEV_SEED=1`, hit
-   `POST /api/dev/seed`, then unset the flag and redeploy
-
----
-
-## Source bundle
-
-The original Claude Design HTML/CSS/JS prototype and the conversation
-transcripts that produced it live in **[design_handoff/](design_handoff/)**.
-That folder is reference material — the implementation lives in `aw_portal/`.
+https://awssagan.up.railway.app/index.html
 
 ---
 
