@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clients · AW Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="chrome"></div>
+
+  <main class="wrap">
+    <!-- Page header -->
+    <div class="page-head">
+      <div class="titles">
+        <div class="eyebrow">AW Client Reporting</div>
+        <h1 class="page-title">Clients</h1>
+        <p class="page-sub" id="sub">Household book of business — generate this quarter's reports.</p>
+      </div>
+      <a class="btn btn-primary" href="client.html"><span id="addIcon"></span>Add New Client</a>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="grid g4" id="kpis" style="margin-bottom:18px"></div>
+
+    <!-- Client table -->
+    <div class="section" style="margin-bottom:0">
+      <div class="section-head">
+        <h3>Households</h3>
+        <span class="hint" id="count"></span>
+        <div class="spacer"></div>
+        <input class="input" id="search" type="search" placeholder="Search households…" style="width:220px;height:32px" />
+        <div class="seg" id="filterSeg">
+          <button data-f="all" class="on">All</button>
+          <button data-f="due">Report due</button>
+          <button data-f="done">Up to date</button>
+        </div>
+      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:34%">Household</th>
+            <th>Structure</th>
+            <th>Accounts</th>
+            <th>Last report</th>
+            <th>Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById("chrome").innerHTML = AW.topbar("clients");
+    document.getElementById("addIcon").innerHTML = AW.icon("plus");
+
+    const RQ = AW.dates.currentReportingQuarter(); // e.g. {label:"Q1 2026", date:"2026-03-31"}
+    let filter = "all";
+    let query = "";
+
+    function accountCount(c) {
+      return (c.retirement[1] || []).length + (c.retirement[2] || []).length + (c.nonRetirement || []).length;
+    }
+    // "due" = no report dated within the current reporting quarter
+    function isDue(c) {
+      if (!c.lastReportDate) return true;
+      return new Date(c.lastReportDate) < new Date(RQ.date);
+    }
+
+    function kpis(clients) {
+      const total = clients.length;
+      const due = clients.filter(isDue).length;
+      const newClients = clients.filter((c) => !c.lastReportDate).length;
+      const card = (label, value, sub, tone) => `
+        <div class="card card-pad">
+          <div class="lbl" style="color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-size:11px">${label}</div>
+          <div style="font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:6px" class="tnum">${value}</div>
+          <div class="muted" style="font-size:12px;margin-top:2px">${sub}</div>
+        </div>`;
+      document.getElementById("kpis").innerHTML =
+        card("Active households", total, "Under management") +
+        card("Reporting period", RQ.label, "Quarter to close out") +
+        card("Reports due", due, due ? "Awaiting this quarter" : "All caught up") +
+        card("New clients", newClients, "No reports yet");
+    }
+
+    async function render() {
+      let clients;
+      try {
+        clients = await AW.store.listClients();
+      } catch (e) {
+        document.getElementById("rows").innerHTML =
+          `<tr><td colspan="6"><div class="empty"><h4>Couldn't load clients</h4>
+           <p>${e.message || "Network error"}</p></div></td></tr>`;
+        return;
+      }
+      kpis(clients);
+      document.getElementById("count").textContent = clients.length + " total";
+
+      const shown = clients.filter((c) => {
+        if (query && !AW.who.displayName(c).toLowerCase().includes(query)) return false;
+        if (filter === "due") return isDue(c);
+        if (filter === "done") return !isDue(c);
+        return true;
+      });
+
+      const rows = document.getElementById("rows");
+      if (!shown.length) {
+        rows.innerHTML = `<tr><td colspan="6"><div class="empty">
+          <div>${AW.icon("users", 40)}</div><h4>No households here</h4>
+          <p>${query ? "No names match “" + query + "”." : "Try a different filter."}</p></div></td></tr>`;
+        return;
+      }
+
+      rows.innerHTML = shown.map((c) => {
+        const due = isDue(c);
+        const dual = c.married && c.client2;
+        const initials = dual
+          ? AW.fmt.initials(c.client1)[0] + AW.fmt.initials(c.client2)[0]
+          : AW.fmt.initials(c.client1);
+        const structure = dual
+          ? `<span class="tag tag-blue">${AW.icon("users", 13)} Joint</span>`
+          : `<span class="tag tag-gray">${AW.icon("user", 13)} Individual</span>`;
+        const status = !c.lastReportDate
+          ? `<span class="tag tag-amber"><span class="dot dot-amber"></span> New</span>`
+          : due
+          ? `<span class="tag tag-amber"><span class="dot dot-amber"></span> Due ${RQ.label}</span>`
+          : `<span class="tag tag-green"><span class="dot dot-green"></span> Filed ${RQ.label}</span>`;
+
+        return `<tr>
+          <td>
+            <div class="row gap-sm">
+              <span class="avatar ${dual ? "dual" : ""}">${initials.toUpperCase()}</span>
+              <div>
+                <div class="nm">${AW.who.displayName(c)}</div>
+                <div class="sub">${c.trust && c.trust.exists ? "Trust · " : ""}${c.id.replace("c-", "#").toUpperCase()}</div>
+              </div>
+            </div>
+          </td>
+          <td>${structure}</td>
+          <td><span class="tnum" style="font-weight:600">${accountCount(c)}</span> <span class="muted">accounts</span>${
+            (c.liabilities || []).length ? ` · <span class="muted">${c.liabilities.length} liab.</span>` : ""
+          }</td>
+          <td class="tnum">${AW.dates.pretty(c.lastReportDate)}</td>
+          <td>${status}</td>
+          <td>
+            <div class="row gap-sm" style="justify-content:flex-end">
+              <a class="btn btn-ghost btn-sm" href="client.html?id=${c.id}">${AW.icon("edit", 14)} Edit Profile</a>
+              <a class="btn btn-primary btn-sm" href="report.html?id=${c.id}">${AW.icon("chart", 14)} Generate Report</a>
+            </div>
+          </td>
+        </tr>`;
+      }).join("");
+    }
+
+    document.getElementById("filterSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      filter = b.dataset.f;
+      [...e.currentTarget.children].forEach((x) => x.classList.toggle("on", x === b));
+      render();
+    });
+
+    document.getElementById("search").addEventListener("input", (e) => {
+      query = e.target.value.trim().toLowerCase();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

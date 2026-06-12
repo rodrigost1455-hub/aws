@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>TCC · {{ household }} · {{ quarter }}</title>
+  <style>
+    /* =========================================================
+       TCC — Total Client Chart (Circle Chart)
+       Letter, absolute-positioned. Bubble GRID slots are FIXED
+       at 6 per spouse / 6 for non-retirement — empty cells are
+       left blank but their positions never reflow.
+       ========================================================= */
+    :root {
+      --blue:    #1e3a8a;
+      --blue-2:  #2563eb;
+      --blue-3:  #dbeafe;
+      --green:   #15803d;
+      --green-2: #22c55e;
+      --green-3: #dcfce7;
+      --amber:   #b45309;
+      --amber-3: #fef3c7;
+      --gray:    #334155;
+      --gray-3:  #e2e8f0;
+      --gray-4:  #f1f5f9;
+      --ink:     #0f172a;
+      --muted:   #475569;
+      --line:    #cbd5e1;
+    }
+    @page { size: letter; margin: 0; }
+    html, body { padding: 0; margin: 0; color: var(--ink); font-family: "Helvetica","Arial",sans-serif; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+
+    .page { position: relative; width: 8.5in; height: 11in; overflow: hidden; }
+
+    .brand-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 0.55in;
+      background: var(--blue); color: #fff;
+    }
+    .brand-bar .mark   { position: absolute; left: 0.55in; top: 50%; transform: translateY(-50%); font-size: 13pt; font-weight: 800; letter-spacing: 0.18em; }
+    .brand-bar .doctype{ position: absolute; right: 0.55in; top: 50%; transform: translateY(-50%); font-size: 9pt;  letter-spacing: 0.22em; opacity: 0.9; }
+
+    .household { position: absolute; left: 0.55in; right: 0.55in; top: 0.78in; height: 0.55in; }
+    .household .eyebrow { font-size: 8pt; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
+    .household h1 { margin: 4pt 0 0; font-size: 20pt; line-height: 1; font-weight: 700; letter-spacing: -0.01em; }
+    .household .meta { position: absolute; right: 0; top: 0; text-align: right; font-size: 9pt; color: var(--muted); }
+    .household .meta .quarter { display: block; font-size: 11pt; color: var(--ink); font-weight: 600; }
+
+    /* --- Client info bubbles (green) --------------------------------- */
+    .person-row { position: absolute; left: 0.55in; right: 0.55in; top: 1.42in; height: 0.9in; }
+    .person {
+      position: absolute; width: 3.45in; height: 0.9in;
+      box-sizing: border-box;
+      border-radius: 50pt;
+      background: var(--green-3); border: 2pt solid var(--green); color: var(--green);
+      padding: 8pt 18pt;
+      overflow: hidden;
+    }
+    .person.c1 { left: 0; }
+    .person.c2 { right: 0; }
+    .person .name { font-size: 13pt; font-weight: 700; color: var(--green); }
+    .person .row  { font-size: 8.5pt; color: var(--green); opacity: 0.85; margin-top: 3pt; letter-spacing: 0.06em; }
+    .person .row .pip { display: inline-block; margin-right: 8pt; }
+    .person.empty { background: #fff; border-color: var(--gray-3); }
+    .person.empty .name, .person.empty .row { color: #94a3b8; }
+
+    /* --- Section frames --------------------------------------------- */
+    .frame { position: absolute; left: 0.55in; right: 0.55in; }
+    .frame h3 {
+      margin: 0 0 6pt;
+      font-size: 10pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+    }
+    .frame h3 b { color: var(--ink); letter-spacing: 0; text-transform: none; font-size: 12pt; margin-left: 8pt; }
+
+    /* Retirement section — fixed 6-cell grid per spouse (2 cols × 3 rows) */
+    .ret-section { top: 2.5in; height: 3.0in; }
+    .col {
+      position: absolute; top: 22pt; width: 3.45in; height: 2.7in;
+      border: 1pt solid var(--gray-3); border-radius: 14pt; padding: 14pt;
+      box-sizing: border-box;
+      background: var(--gray-4);
+    }
+    .col.c1 { left: 0; }
+    .col.c2 { right: 0; }
+    .col .col-head { font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 8pt; }
+    .col .col-head b { color: var(--green); }
+    .col .col-total {
+      position: absolute; bottom: 10pt; left: 14pt; right: 14pt;
+      border-top: 1pt solid var(--gray-3); padding-top: 6pt;
+      font-size: 9pt; color: var(--muted);
+    }
+    .col .col-total .v { float: right; font-size: 11pt; font-weight: 700; color: var(--ink); }
+
+    /* Account bubble grid — fixed 6 slots positioned absolutely */
+    .acct-grid { position: relative; height: 1.95in; }
+    .acct-bubble {
+      position: absolute;
+      width: 1.45in; height: 0.78in;
+      border-radius: 10pt;
+      background: #fff; border: 1.5pt solid var(--green-2);
+      box-sizing: border-box;
+      padding: 6pt 8pt; overflow: hidden;
+    }
+    .acct-bubble.empty { border-style: dashed; border-color: var(--gray-3); background: transparent; }
+    .acct-bubble .type { font-size: 8pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .acct-bubble .num  { font-size: 7.5pt; color: var(--muted); margin-top: 1pt; }
+    .acct-bubble .bal  { position: absolute; left: 8pt; right: 8pt; bottom: 5pt; text-align: right; font-size: 10.5pt; font-weight: 700; }
+    .acct-bubble .bal.long  { font-size: 9pt; }
+    .acct-bubble .bal.xlong { font-size: 7.5pt; }
+    .acct-bubble .cash { position: absolute; left: 8pt; bottom: 5pt; font-size: 7pt; color: var(--muted); }
+
+    /* Slot positions: 2 columns × 3 rows */
+    .slot-1 { left: 0;       top: 14pt; }
+    .slot-2 { right: 0;      top: 14pt; }
+    .slot-3 { left: 0;       top: 76pt; }
+    .slot-4 { right: 0;      top: 76pt; }
+    .slot-5 { left: 0;       top: 138pt; }
+    .slot-6 { right: 0;      top: 138pt; }
+
+    /* Non-retirement section — full-width 6-slot grid (3 × 2) */
+    .nonret-section { top: 5.7in; height: 2.2in; border: 1pt solid var(--gray-3); border-radius: 14pt; padding: 14pt; box-sizing: border-box; background: var(--gray-4); }
+    .nonret-section h3 { margin-bottom: 6pt; }
+    .nonret-grid { position: relative; height: 1.55in; }
+    .nonret-grid .acct-bubble { border-color: var(--blue-2); }
+    .nonret-grid .acct-bubble .type { color: var(--blue); }
+    /* 3 columns × 2 rows */
+    .ns-1 { left: 0;     top: 0; }
+    .ns-2 { left: 2.4in; top: 0; }
+    .ns-3 { left: 4.8in; top: 0; }
+    .ns-4 { left: 0;     top: 60pt; }
+    .ns-5 { left: 2.4in; top: 60pt; }
+    .ns-6 { left: 4.8in; top: 60pt; }
+    .nonret-section .total {
+      position: absolute; right: 14pt; bottom: 8pt; font-size: 9pt; color: var(--muted);
+    }
+    .nonret-section .total .v { font-size: 11pt; font-weight: 700; color: var(--ink); margin-left: 8pt; }
+
+    /* Trust card — center, amber */
+    .trust { position: absolute; left: 0.55in; right: 0.55in; top: 8.05in; height: 0.95in;
+             border-radius: 14pt; background: var(--amber-3); border: 2pt solid var(--amber); padding: 12pt 16pt; box-sizing: border-box; overflow: hidden; }
+    .trust .lbl { font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--amber); }
+    .trust .address { font-size: 12pt; font-weight: 600; color: var(--ink); margin-top: 4pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trust .zillow-lbl { position: absolute; right: 16pt; top: 12pt; font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--amber); }
+    .trust .zillow-val { position: absolute; right: 16pt; top: 28pt; font-size: 20pt; font-weight: 800; color: var(--amber); }
+    .trust .zillow-val.long  { font-size: 16pt; }
+    .trust .zillow-val.xlong { font-size: 13pt; }
+    .trust.absent { background: #fff; border-style: dashed; border-color: var(--gray-3); }
+    .trust.absent .lbl, .trust.absent .address, .trust.absent .zillow-lbl, .trust.absent .zillow-val { color: #94a3b8; }
+
+    /* Liabilities — gray pill row */
+    .liab-bar { position: absolute; left: 0.55in; right: 0.55in; top: 9.1in; height: 0.72in;
+                background: var(--gray-4); border: 1pt solid var(--gray-3); border-radius: 12pt; padding: 0 14pt; box-sizing: border-box; overflow: hidden; }
+    .liab-bar .lbl { position: absolute; left: 14pt; top: 10pt; font-size: 9pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+    .liab-bar .total { position: absolute; right: 14pt; top: 10pt; font-size: 9pt; color: var(--muted); }
+    .liab-bar .total .v { font-size: 14pt; font-weight: 800; color: var(--ink); margin-left: 8pt; }
+    .liab-bar .row { position: absolute; left: 14pt; right: 14pt; bottom: 8pt; font-size: 9pt; color: var(--ink); }
+    .liab-pill { display: inline-block; padding: 1pt 8pt; margin-right: 8pt;
+                 background: #fff; border: 1pt solid var(--gray-3); border-radius: 99pt; font-size: 8.5pt; }
+
+    /* Summary boxes — 4 fixed gray cards across the bottom */
+    .summary { position: absolute; left: 0.55in; right: 0.55in; top: 9.95in; height: 0.85in; }
+    .sum-box {
+      position: absolute; width: 1.7in; height: 0.85in;
+      box-sizing: border-box;
+      background: var(--gray-4); border: 1pt solid var(--gray-3); border-radius: 10pt;
+      padding: 8pt 10pt; overflow: hidden;
+    }
+    .sum-box .lbl { font-size: 7.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    .sum-box .val { font-size: 14pt; font-weight: 800; margin-top: 4pt; }
+    .sum-box .val.long  { font-size: 11pt; }
+    .sum-box .val.xlong { font-size: 9pt; }
+    .sum-box.s1 { left: 0; }
+    .sum-box.s2 { left: 1.85in; }
+    .sum-box.s3 { left: 3.7in; }
+    .sum-box.s4 { left: 5.55in; background: var(--blue-3); border-color: var(--blue); color: var(--blue); }
+    .sum-box.s4 .lbl { color: var(--blue); }
+
+    .footer { position: absolute; left: 0.55in; right: 0.55in; bottom: 0.18in;
+              font-size: 7.5pt; color: var(--muted); letter-spacing: 0.06em; }
+    .footer .right { float: right; }
+  </style>
+</head>
+<body>
+
+{% macro amount_class(n) -%}
+  {% set s = n | money -%}
+  {% if s|length > 12 %}xlong{% elif s|length > 9 %}long{% endif -%}
+{%- endmacro %}
+
+{% macro acct_bubble(slot, a) %}
+  <div class="acct-bubble {{ slot }}{% if not a %} empty{% endif %}">
+    {% if a %}
+      <div class="type">{{ a.type }}</div>
+      <div class="num">····{{ a.last4 }}{% if a.name %} · {{ a.name }}{% endif %}</div>
+      {% if a.cash is not none %}
+        <div class="cash">cash {{ a.cash | money }}</div>
+      {% endif %}
+      <div class="bal {{ amount_class(a.balance) }}">{{ a.balance | money }}</div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+<section class="page">
+
+  <div class="brand-bar">
+    <div class="mark">AW PORTAL</div>
+    <div class="doctype">TCC · TOTAL CLIENT CHART</div>
+  </div>
+
+  <header class="household">
+    <div class="eyebrow">Household</div>
+    <h1>{{ household }}</h1>
+    <div class="meta">
+      <span class="quarter">{{ quarter }}</span>
+      Report dated {{ report_date }}
+    </div>
+  </header>
+
+  <!-- Client info bubbles (always two fixed slots; second is muted/empty for singles) -->
+  <div class="person-row">
+    <div class="person c1">
+      <div class="name">{{ client1.name }}</div>
+      <div class="row">
+        <span class="pip">Age <b>{{ client1.age if client1.age is not none else '—' }}</b></span>
+        <span class="pip">DOB <b>{{ client1.dob or '—' }}</b></span>
+        <span class="pip">SSN <b>····{{ client1.ssn }}</b></span>
+      </div>
+    </div>
+    {% if married and client2 %}
+      <div class="person c2">
+        <div class="name">{{ client2.name }}</div>
+        <div class="row">
+          <span class="pip">Age <b>{{ client2.age if client2.age is not none else '—' }}</b></span>
+          <span class="pip">DOB <b>{{ client2.dob or '—' }}</b></span>
+          <span class="pip">SSN <b>····{{ client2.ssn }}</b></span>
+        </div>
+      </div>
+    {% else %}
+      <div class="person c2 empty">
+        <div class="name">Individual household</div>
+        <div class="row"><span class="pip">No second client</span></div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ============================ Retirement ============================ -->
+  <div class="frame ret-section">
+    <h3>Retirement <b>Tax-deferred &amp; Roth accounts</b></h3>
+
+    <div class="col c1">
+      <div class="col-head">Client 1 · <b>{{ client1.name }}</b></div>
+      <div class="acct-grid">
+        {% set r1 = retirement['1'] %}
+        {{ acct_bubble('slot-1', r1[0] if r1|length > 0 else None) }}
+        {{ acct_bubble('slot-2', r1[1] if r1|length > 1 else None) }}
+        {{ acct_bubble('slot-3', r1[2] if r1|length > 2 else None) }}
+        {{ acct_bubble('slot-4', r1[3] if r1|length > 3 else None) }}
+        {{ acct_bubble('slot-5', r1[4] if r1|length > 4 else None) }}
+        {{ acct_bubble('slot-6', r1[5] if r1|length > 5 else None) }}
+      </div>
+      <div class="col-total">
+        Subtotal <span class="v">{{ totals.c1_retirement | money }}</span>
+      </div>
+    </div>
+
+    <div class="col c2">
+      <div class="col-head">Client 2 · <b>{{ client2.name if client2 else '—' }}</b></div>
+      <div class="acct-grid">
+        {% set r2 = retirement['2'] %}
+        {{ acct_bubble('slot-1', r2[0] if r2|length > 0 else None) }}
+        {{ acct_bubble('slot-2', r2[1] if r2|length > 1 else None) }}
+        {{ acct_bubble('slot-3', r2[2] if r2|length > 2 else None) }}
+        {{ acct_bubble('slot-4', r2[3] if r2|length > 3 else None) }}
+        {{ acct_bubble('slot-5', r2[4] if r2|length > 4 else None) }}
+        {{ acct_bubble('slot-6', r2[5] if r2|length > 5 else None) }}
+      </div>
+      <div class="col-total">
+        Subtotal <span class="v">{{ totals.c2_retirement | money }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ Non-Retirement ============================ -->
+  <div class="nonret-section">
+    <h3>Non-retirement <b>Brokerage &amp; Joint</b></h3>
+    <div class="nonret-grid">
+      {% set nr = non_retirement %}
+      {{ acct_bubble('ns-1', nr[0] if nr|length > 0 else None) }}
+      {{ acct_bubble('ns-2', nr[1] if nr|length > 1 else None) }}
+      {{ acct_bubble('ns-3', nr[2] if nr|length > 2 else None) }}
+      {{ acct_bubble('ns-4', nr[3] if nr|length > 3 else None) }}
+      {{ acct_bubble('ns-5', nr[4] if nr|length > 4 else None) }}
+      {{ acct_bubble('ns-6', nr[5] if nr|length > 5 else None) }}
+    </div>
+    <div class="total">Subtotal<span class="v">{{ totals.non_retirement | money }}</span></div>
+  </div>
+
+  <!-- ============================ Trust (center) ============================ -->
+  {% if trust.exists %}
+    <div class="trust">
+      <div class="lbl">Trust property</div>
+      <div class="address">{{ trust.address }}</div>
+      <div class="zillow-lbl">Zillow estimate</div>
+      <div class="zillow-val {{ amount_class(trust.zillow) }}">{{ trust.zillow | money }}</div>
+    </div>
+  {% else %}
+    <div class="trust absent">
+      <div class="lbl">Trust property</div>
+      <div class="address">None on file</div>
+      <div class="zillow-lbl">Zillow</div>
+      <div class="zillow-val">—</div>
+    </div>
+  {% endif %}
+
+  <!-- ============================ Liabilities ============================ -->
+  <div class="liab-bar">
+    <div class="lbl">Liabilities <span style="text-transform:none;letter-spacing:0;font-size:8pt;color:#94a3b8">· informational · never subtracted</span></div>
+    <div class="total">Liabilities Total <span class="v">{{ totals.liabilities_total | money }}</span></div>
+    <div class="row">
+      {% if liabilities %}
+        {% for l in liabilities[:6] %}
+          <span class="liab-pill">{{ l.type }}{% if l.rate is not none %} · {{ '%.2f'|format(l.rate|float) }}%{% endif %} · <b>{{ l.balance | money }}</b></span>
+        {% endfor %}
+      {% else %}
+        <span style="color:#94a3b8">No liabilities on file.</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ============================ Summary boxes ============================ -->
+  <div class="summary">
+    <div class="sum-box s1">
+      <div class="lbl">Client 1 Retirement</div>
+      <div class="val {{ amount_class(totals.c1_retirement) }}">{{ totals.c1_retirement | money }}</div>
+    </div>
+    <div class="sum-box s2">
+      <div class="lbl">Client 2 Retirement</div>
+      <div class="val {{ amount_class(totals.c2_retirement) }}">{{ totals.c2_retirement | money }}</div>
+    </div>
+    <div class="sum-box s3">
+      <div class="lbl">Non-Retirement Total</div>
+      <div class="val {{ amount_class(totals.non_retirement) }}">{{ totals.non_retirement | money }}</div>
+    </div>
+    <div class="sum-box s4">
+      <div class="lbl">Grand Total Net Worth</div>
+      <div class="val {{ amount_class(totals.grand_net_worth) }}">{{ totals.grand_net_worth | money }}</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    AW Client Reporting · Confidential — for household {{ household }}
+    <span class="right">TCC · {{ quarter }}</span>
+  </div>
+
+</section>
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quarterly Report · AW Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="report.css" />
+</head>
+<body>
+  <div id="chrome"></div>
+
+  <main class="wrap" id="page">
+    <div class="crumbs">
+      <a href="index.html">Clients</a><span class="sep">/</span>
+      <a id="crumbClient" href="#">Client</a><span class="sep">/</span><span>Quarterly report</span>
+    </div>
+
+    <!-- Page header -->
+    <div class="page-head">
+      <div class="titles">
+        <div class="eyebrow" id="eyebrow">Quarterly report</div>
+        <h1 class="page-title" id="title">Generate Report</h1>
+        <p class="page-sub" id="sub"></p>
+      </div>
+      <div class="row gap-sm" id="headTools"></div>
+    </div>
+
+    <!-- Layout-variation switcher (explores calc-panel placement) -->
+    <div class="vbar" id="vbar">
+      <span class="vbar-lbl">Live calc panel</span>
+      <div class="seg" id="layoutSeg">
+        <button data-l="sidebar" class="on">Sidebar</button>
+        <button data-l="bottom">Pinned bar</button>
+        <button data-l="top">Summary cards</button>
+      </div>
+      <span class="vbar-note">Try each placement — the form &amp; math are identical.</span>
+      <div class="spacer"></div>
+      <span class="vbar-meta" id="completeMeta"></span>
+    </div>
+
+    <!-- App body — report.js renders entry form / calc panel / result here -->
+    <div id="reportRoot"></div>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script src="report.js"></script>
+</body>
+</html>

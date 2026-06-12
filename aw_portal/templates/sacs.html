@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SACS · {{ household }} · {{ quarter }}</title>
+  <style>
+    /* =========================================================
+       SACS — Simple Automated Cash Flow
+       Letter, absolute-positioned, "nothing can move".
+       ========================================================= */
+    :root {
+      --blue:    #1e3a8a;
+      --blue-2:  #2563eb;
+      --blue-3:  #dbeafe;
+      --green:   #15803d;
+      --green-2: #22c55e;
+      --green-3: #dcfce7;
+      --red:     #b91c1c;
+      --red-2:   #ef4444;
+      --red-3:   #fee2e2;
+      --ink:     #0f172a;
+      --muted:   #475569;
+      --line:    #cbd5e1;
+    }
+    @page { size: letter; margin: 0; }
+    html, body { padding: 0; margin: 0; color: var(--ink); font-family: "Helvetica","Arial",sans-serif; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+
+    .page {
+      position: relative;
+      width: 8.5in;
+      height: 11in;
+      overflow: hidden;
+      page-break-after: always;
+    }
+    .page:last-child { page-break-after: auto; }
+
+    /* --- Brand bar ---------------------------------------------------- */
+    .brand-bar {
+      position: absolute; top: 0; left: 0; right: 0; height: 0.55in;
+      background: var(--blue);
+      color: #fff;
+    }
+    .brand-bar .mark {
+      position: absolute; left: 0.55in; top: 50%; transform: translateY(-50%);
+      font-size: 13pt; font-weight: 800; letter-spacing: 0.18em;
+    }
+    .brand-bar .doctype {
+      position: absolute; right: 0.55in; top: 50%; transform: translateY(-50%);
+      font-size: 9pt; letter-spacing: 0.22em; opacity: 0.9;
+    }
+
+    /* --- Household header -------------------------------------------- */
+    .household {
+      position: absolute; left: 0.55in; right: 0.55in; top: 0.9in;
+      height: 0.7in;
+    }
+    .household .eyebrow {
+      font-size: 8pt; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;
+    }
+    .household h1 {
+      margin: 4pt 0 0; font-size: 22pt; line-height: 1; font-weight: 700; letter-spacing: -0.01em;
+    }
+    .household .meta {
+      position: absolute; right: 0; top: 0; text-align: right;
+      font-size: 9pt; color: var(--muted);
+    }
+    .household .meta .quarter {
+      display: block; font-size: 12pt; color: var(--ink); font-weight: 600;
+    }
+
+    /* --- Page 1 — bubble diagram ------------------------------------- */
+    .section-title {
+      position: absolute; left: 0.55in; right: 0.55in; top: 1.85in;
+      font-size: 10pt; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase;
+    }
+    .section-title b { color: var(--ink); letter-spacing: 0; text-transform: none; font-size: 14pt; display: block; margin-top: 4pt; }
+
+    .flow {
+      position: absolute; left: 0; right: 0; top: 2.85in; height: 5.5in;
+    }
+
+    /* Circles are FIXED size — number length cannot push or stretch them. */
+    .bubble {
+      position: absolute;
+      width: 2.4in; height: 2.4in;
+      border-radius: 50%;
+      box-sizing: border-box;
+      text-align: center;
+      overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .bubble .lbl { font-size: 9pt; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.85; }
+    .bubble .amount { font-size: 22pt; font-weight: 700; margin-top: 6pt; letter-spacing: -0.01em; line-height: 1; padding: 0 12pt; }
+    .bubble .amount.long { font-size: 17pt; }   /* applied when number is long; positions still fixed */
+    .bubble .amount.xlong { font-size: 13pt; }
+    .bubble .sub { font-size: 8.5pt; opacity: 0.8; margin-top: 4pt; }
+
+    .bubble.inflow  { left: 0.95in; top: 0.20in; background: var(--green-3); border: 3pt solid var(--green); color: var(--green); }
+    .bubble.outflow { right: 0.95in; top: 0.20in; background: var(--red-3);  border: 3pt solid var(--red);   color: var(--red); }
+    .bubble.inflow .lbl, .bubble.inflow .amount, .bubble.inflow .sub { color: var(--green); }
+    .bubble.outflow .lbl, .bubble.outflow .amount, .bubble.outflow .sub { color: var(--red); }
+
+    /* Horizontal arrow (red, with an X marker) between the two bubbles */
+    .arrow-h {
+      position: absolute;
+      left: 3.5in; top: 1.25in;
+      width: 1.5in; height: 0.4in;
+    }
+
+    /* Excess down-arrow (blue) under the inflow bubble */
+    .arrow-v {
+      position: absolute;
+      left: 1.7in; top: 2.65in;
+      width: 0.9in; height: 1.3in;
+    }
+
+    /* Reserve panel — fixed slot at the bottom of the diagram */
+    .reserve-card {
+      position: absolute;
+      left: 0.95in; right: 0.95in; bottom: 0.4in;
+      height: 1.6in;
+      background: var(--blue-3);
+      border: 3pt solid var(--blue);
+      border-radius: 16pt;
+      box-sizing: border-box;
+      color: var(--blue);
+      padding: 0;
+    }
+    .reserve-card .title { position: absolute; left: 24pt; top: 14pt; font-size: 11pt; letter-spacing: 0.18em; text-transform: uppercase; }
+    .reserve-card .name  { position: absolute; left: 24pt; top: 34pt; font-size: 22pt; font-weight: 700; }
+    .reserve-card .excess-lbl { position: absolute; right: 24pt; top: 16pt; font-size: 9pt; letter-spacing: 0.18em; text-transform: uppercase; }
+    .reserve-card .excess-val { position: absolute; right: 24pt; top: 30pt; font-size: 26pt; font-weight: 800; }
+    .reserve-card .excess-val.long  { font-size: 22pt; }
+    .reserve-card .excess-val.xlong { font-size: 17pt; }
+    .reserve-card .formula { position: absolute; left: 24pt; right: 24pt; bottom: 14pt; font-size: 9pt; color: var(--blue); opacity: 0.85; }
+
+    /* --- Page 2 — reserve detail ------------------------------------ */
+    .stat-grid {
+      position: absolute;
+      left: 0.55in; right: 0.55in; top: 1.85in;
+      height: 8.6in;
+    }
+    .stat-card {
+      position: absolute; width: 3.4in; height: 1.6in;
+      box-sizing: border-box;
+      border-radius: 14pt; border: 2pt solid var(--line);
+      padding: 16pt 18pt;
+      overflow: hidden;
+    }
+    .stat-card.reserve   { left: 0;     top: 0;    border-color: var(--blue);   background: var(--blue-3);  color: var(--blue); }
+    .stat-card.target    { right: 0;    top: 0;    border-color: var(--blue-2); background: #fff; }
+    .stat-card .lbl { font-size: 9pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .stat-card.reserve .lbl { color: var(--blue); }
+    .stat-card .val { margin-top: 10pt; font-size: 28pt; font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; }
+    .stat-card .val.long  { font-size: 22pt; }
+    .stat-card .val.xlong { font-size: 17pt; }
+    .stat-card .sub { position: absolute; left: 18pt; right: 18pt; bottom: 14pt; font-size: 8.5pt; color: var(--muted); }
+
+    .acct-section {
+      position: absolute; left: 0;  right: 0; top: 2in;
+      height: 5.7in;
+    }
+    .acct-section h3 {
+      margin: 0 0 10pt; font-size: 11pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+    }
+    /* Account rows — fixed 0.45in height each, max 8 rows, fixed columns */
+    .acct-row {
+      position: relative;
+      height: 0.45in;
+      border-bottom: 1pt solid var(--line);
+      box-sizing: border-box;
+    }
+    .acct-row .name {
+      position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      max-width: 3.8in;
+      font-size: 11pt; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .acct-row .inst {
+      position: absolute; left: 0; top: 50%; transform: translateY(8pt);
+      font-size: 8.5pt; color: var(--muted);
+    }
+    .acct-row .balance {
+      position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      width: 2.2in; text-align: right;
+      font-size: 13pt; font-weight: 700; font-variant-numeric: tabular-nums;
+    }
+    .acct-row .balance.long  { font-size: 11pt; }
+    .acct-row .balance.xlong { font-size: 9pt; }
+
+    .footer {
+      position: absolute; left: 0.55in; right: 0.55in; bottom: 0.35in;
+      font-size: 7.5pt; color: var(--muted); letter-spacing: 0.06em;
+    }
+    .footer .right { float: right; }
+  </style>
+</head>
+<body>
+
+{# Helpers — apply size-down classes when number strings exceed certain widths #}
+{% macro amount_class(n) -%}
+  {% set s = n | money -%}
+  {% if s|length > 12 %}xlong{% elif s|length > 9 %}long{% endif -%}
+{%- endmacro %}
+
+<!-- ========================================================
+     PAGE 1 — Cashflow bubble diagram
+     ======================================================== -->
+<section class="page">
+  <div class="brand-bar">
+    <div class="mark">AW PORTAL</div>
+    <div class="doctype">SACS · SIMPLE AUTOMATED CASH FLOW</div>
+  </div>
+
+  <header class="household">
+    <div class="eyebrow">Household</div>
+    <h1>{{ household }}</h1>
+    <div class="meta">
+      <span class="quarter">{{ quarter }}</span>
+      Report dated {{ report_date }}
+    </div>
+  </header>
+
+  <div class="section-title">
+    Page 1
+    <b>Monthly cash flow</b>
+  </div>
+
+  <div class="flow">
+
+    <div class="bubble inflow">
+      <div class="lbl">Inflow</div>
+      <div class="amount {{ amount_class(financials.inflow) }}">{{ financials.inflow | money }}</div>
+      <div class="sub">per month · after tax</div>
+    </div>
+
+    <div class="bubble outflow">
+      <div class="lbl">Outflow</div>
+      <div class="amount {{ amount_class(financials.outflow) }}">{{ financials.outflow | money }}</div>
+      <div class="sub">per month · expense budget</div>
+    </div>
+
+    <!-- Red arrow with X marker between Inflow → Outflow -->
+    <svg class="arrow-h" viewBox="0 0 200 50" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrowHead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#b91c1c"/>
+        </marker>
+      </defs>
+      <line x1="0" y1="25" x2="190" y2="25" stroke="#b91c1c" stroke-width="4" marker-end="url(#arrowHead)"/>
+      <!-- X marker at midpoint signals the outflow consumes inflow -->
+      <g stroke="#b91c1c" stroke-width="4" stroke-linecap="round">
+        <line x1="86" y1="11" x2="114" y2="39"/>
+        <line x1="114" y1="11" x2="86" y2="39"/>
+      </g>
+    </svg>
+
+    <!-- Blue down arrow for the excess that becomes the Private Reserve -->
+    <svg class="arrow-v" viewBox="0 0 60 150" preserveAspectRatio="none">
+      <defs>
+        <marker id="excessHead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#1e3a8a"/>
+        </marker>
+      </defs>
+      <line x1="30" y1="0" x2="30" y2="135" stroke="#1e3a8a" stroke-width="4" marker-end="url(#excessHead)"/>
+      <text x="36" y="78" font-family="Helvetica" font-size="11" fill="#1e3a8a" font-weight="700">EXCESS</text>
+    </svg>
+
+    <div class="reserve-card">
+      <div class="title">Private Reserve</div>
+      <div class="name">Excess to reserve</div>
+      <div class="excess-lbl">Monthly excess</div>
+      <div class="excess-val {{ amount_class(financials.excess) }}">{{ financials.excess | money_per_mo }}</div>
+      <div class="formula">Excess = Inflow − Outflow. Funds the Private Reserve until target is met; surplus invests forward.</div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    AW Client Reporting · Confidential — for household {{ household }}
+    <span class="right">SACS · Page 1 of 2</span>
+  </div>
+</section>
+
+
+<!-- ========================================================
+     PAGE 2 — Private Reserve balance, brokerage account(s), target
+     ======================================================== -->
+<section class="page">
+  <div class="brand-bar">
+    <div class="mark">AW PORTAL</div>
+    <div class="doctype">SACS · PRIVATE RESERVE DETAIL</div>
+  </div>
+
+  <header class="household">
+    <div class="eyebrow">Household</div>
+    <h1>{{ household }}</h1>
+    <div class="meta">
+      <span class="quarter">{{ quarter }}</span>
+      Report dated {{ report_date }}
+    </div>
+  </header>
+
+  <div class="section-title">
+    Page 2
+    <b>Private Reserve &amp; investment accounts</b>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card reserve">
+      <div class="lbl">Private Reserve balance</div>
+      <div class="val {{ amount_class(reserve.balance) }}">{{ reserve.balance | money }}</div>
+      <div class="sub">Current balance reported this quarter</div>
+    </div>
+    <div class="stat-card target">
+      <div class="lbl">Private Reserve target</div>
+      <div class="val {{ amount_class(reserve.target) }}">{{ reserve.target | money }}</div>
+      <div class="sub">(6 × outflow) + insurance deductibles</div>
+    </div>
+
+    <div class="acct-section">
+      <h3>Non-retirement investment accounts</h3>
+      {% if non_retirement %}
+        {% for a in non_retirement[:8] %}
+          <div class="acct-row" style="top: {{ loop.index0 * 0.45 }}in;">
+            <div class="name">{{ a.name or a.type }} · {{ a.type }} ····{{ a.last4 }}</div>
+            <div class="inst">Non-retirement</div>
+            <div class="balance {{ amount_class(a.balance) }}">{{ a.balance | money }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="acct-row"><div class="name" style="color:#94a3b8">No non-retirement accounts on file.</div></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="footer">
+    AW Client Reporting · Confidential — for household {{ household }}
+    <span class="right">SACS · Page 2 of 2</span>
+  </div>
+</section>
+
+</body>
+</html>
